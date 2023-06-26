@@ -1,0 +1,127 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2023-06-25T16:37:29-07:00",
+    "name": "Licensing Server",
+    "author": "loki@crazycoder.dev",
+    "description": "Licensing Server",
+    "features": null,
+    "docker_images": {
+        "Python 3.11": "ghcr.io\/parkervcp\/yolks:python_3.11",
+        "Python 3.10": "ghcr.io\/parkervcp\/yolks:python_3.10",
+        "Python 3.9": "ghcr.io\/parkervcp\/yolks:python_3.9",
+        "Python 3.8": "ghcr.io\/parkervcp\/yolks:python_3.8",
+        "Python 3.7": "ghcr.io\/parkervcp\/yolks:python_3.7",
+        "Python 2.7": "ghcr.io\/parkervcp\/yolks:python_2.7"
+    },
+    "file_denylist": [],
+    "startup": "trap_handler() { kill -INT \"$python_pid\"; }; trap trap_handler SIGTERM SIGINT; python -m pip install --upgrade pip; if [[ ! -z \"{{PY_PACKAGES}}\" ]]; then pip install -U --prefix .local {{PY_PACKAGES}}; fi; if [[ -f \/home\/container\/{{REQUIREMENTS_FILE}} ]]; then pip install -U --prefix .local -r {{REQUIREMENTS_FILE}}; fi; \/usr\/local\/bin\/python \/home\/container\/{{PY_FILE}} --log-level WARN & python_pid=$!; wait",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Database connected\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n#\r\n# Server Files: \/mnt\/server\r\n#!\/bin\/bash\r\n# Update and install dependencies\r\napt update\r\napt -y install mariadb-client\r\n# Construct the DATABASE_URL from environment variables\r\nDB_USER=${DB_USER}\r\nDB_PASSWORD=${DB_PASSWORD}\r\nDB_HOST=${DB_HOST}\r\nDB_PORT=${DB_PORT}\r\nDB_NAME=${DB_NAME}\r\nDATABASE_URL=\"mysql:\/\/${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}\/${DB_NAME}\"\r\nexport DATABASE_URL=${DATABASE_URL}\r\n# Connect to the database and create the table if it does not exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE TABLE IF NOT EXISTS Licensing (\r\nlicense VARCHAR(255) NOT NULL PRIMARY KEY,\r\nip VARCHAR(255) NOT NULL,\r\ndiscordId VARCHAR(255),\r\nemail VARCHAR(255)\r\n);\r\nEOF\r\n# Create the license_check view if it does not already exist\r\nview_exists=$(mysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -N -B -e \"SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_NAME = 'license_check';\")\r\nif [[ ${view_exists} -eq 0 ]]; then\r\n# Create the license_check view only if it doesn't exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE VIEW license_check AS\r\nSELECT license, ip FROM Licensing;\r\nEOF\r\nfi\r\necho -e \"install complete\"\r\nexit 0",
+            "container": "python:3.8-slim",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "App py file",
+            "description": "The file that starts the App.",
+            "env_variable": "PY_FILE",
+            "default_value": "app.py",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Additional Python packages",
+            "description": "Install additional python packages.\r\n\r\nUse spaces to separate",
+            "env_variable": "PY_PACKAGES",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Requirements file",
+            "description": "if there are other requirements files to choose from.",
+            "env_variable": "REQUIREMENTS_FILE",
+            "default_value": "requirements.txt",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "DB_HOST",
+            "description": "Database Host",
+            "env_variable": "DB_HOST",
+            "default_value": "172.18.0.1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "DB_USER",
+            "description": "Database User",
+            "env_variable": "DB_USER",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "DB_PASSWORD",
+            "description": "Database Password",
+            "env_variable": "DB_PASSWORD",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:40",
+            "field_type": "text"
+        },
+        {
+            "name": "DB_NAME",
+            "description": "Database Name",
+            "env_variable": "DB_NAME",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "DB_PORT",
+            "description": "Database Port",
+            "env_variable": "DB_PORT",
+            "default_value": "3306",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|max:5",
+            "field_type": "text"
+        },
+        {
+            "name": "Debug",
+            "description": "True or False, not case-sensitive",
+            "env_variable": "DEBUG",
+            "default_value": "False",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}

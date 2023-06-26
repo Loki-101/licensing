@@ -1,0 +1,2 @@
+robyn == 0.35.0
+aiomysql == 0.2.0
