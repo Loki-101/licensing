@@ -4,7 +4,7 @@
         "version": "PTDL_v2",
         "update_url": null
     },
-    "exported_at": "2023-06-25T16:37:29-07:00",
+    "exported_at": "2023-06-25T17:18:31-07:00",
     "name": "Licensing Server",
     "author": "loki@crazycoder.dev",
     "description": "Licensing Server",
@@ -27,7 +27,7 @@
     },
     "scripts": {
         "installation": {
-            "script": "#!\/bin\/bash\r\n#\r\n# Server Files: \/mnt\/server\r\n#!\/bin\/bash\r\n# Update and install dependencies\r\napt update\r\napt -y install mariadb-client\r\n# Construct the DATABASE_URL from environment variables\r\nDB_USER=${DB_USER}\r\nDB_PASSWORD=${DB_PASSWORD}\r\nDB_HOST=${DB_HOST}\r\nDB_PORT=${DB_PORT}\r\nDB_NAME=${DB_NAME}\r\nDATABASE_URL=\"mysql:\/\/${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}\/${DB_NAME}\"\r\nexport DATABASE_URL=${DATABASE_URL}\r\n# Connect to the database and create the table if it does not exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE TABLE IF NOT EXISTS Licensing (\r\nlicense VARCHAR(255) NOT NULL PRIMARY KEY,\r\nip VARCHAR(255) NOT NULL,\r\ndiscordId VARCHAR(255),\r\nemail VARCHAR(255)\r\n);\r\nEOF\r\n# Create the license_check view if it does not already exist\r\nview_exists=$(mysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -N -B -e \"SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_NAME = 'license_check';\")\r\nif [[ ${view_exists} -eq 0 ]]; then\r\n# Create the license_check view only if it doesn't exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE VIEW license_check AS\r\nSELECT license, ip FROM Licensing;\r\nEOF\r\nfi\r\necho -e \"install complete\"\r\nexit 0",
+            "script": "#!\/bin\/bash\r\n#\r\n# Server Files: \/mnt\/server\r\n#!\/bin\/bash\r\n# Update and install dependencies\r\napt update\r\napt -y install mariadb-client\r\n# Construct the DATABASE_URL from environment variables\r\nDB_USER=${DB_USER}\r\nDB_PASSWORD=${DB_PASSWORD}\r\nDB_HOST=${DB_HOST}\r\nDB_PORT=${DB_PORT}\r\nDB_NAME=${DB_NAME}\r\nDATABASE_URL=\"mysql:\/\/${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}\/${DB_NAME}\"\r\nexport DATABASE_URL=${DATABASE_URL}\r\n# Connect to the database and create the table if it does not exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE TABLE IF NOT EXISTS Licensing (\r\nlicense VARCHAR(255) NOT NULL PRIMARY KEY,\r\nip VARCHAR(255) NOT NULL,\r\ndiscordId VARCHAR(255),\r\nemail VARCHAR(255)\r\n);\r\nEOF\r\n# Create the license_check view if it does not already exist\r\nview_exists=$(mysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} -N -B -e \"SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_NAME = 'license_check';\")\r\nif [[ ${view_exists} -eq 0 ]]; then\r\n# Create the license_check view only if it doesn't exist\r\nmysql -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} -p${DB_PASSWORD} -D ${DB_NAME} <<EOF\r\nCREATE VIEW license_check AS\r\nSELECT license, ip FROM Licensing;\r\nEOF\r\nfi\r\nmkdir -p \/mnt\/server\r\ncd \/mnt\/server\r\necho \"Installing latest version of the licensing server from Github repo \\\"https:\/\/github.com\/Loki-101\/licensing\\\"\"\r\ncurl -LJO https:\/\/github.com\/Loki-101\/licensing\/releases\/latest\/download\/app.py -LJO https:\/\/github.com\/Loki-101\/licensing\/releases\/latest\/download\/requirements.txt\r\necho -e \"install complete\"\r\nexit 0",
             "container": "python:3.8-slim",
             "entrypoint": "bash"
         }
