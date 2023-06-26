@@ -78,4 +78,4 @@ async def check_license(request):
         print(f"Error occurred: {e}")
         return {"error": "Internal Server Error"}, 500
 
-app.start(port=57157)
+app.start(port=os.getenv("SERVER_PORT"))
