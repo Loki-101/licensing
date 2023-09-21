@@ -1,7 +1,7 @@
 # Licensing Server
 A simple licensing server with an optional Pterodactyl Egg
 
-This is designed to be run through a Cloudflare Tunnel or Proxy and it requires a MariaDB Database.
+This is designed to fetch the real IP through a proxy such as cloudflare by default (Or directly if you're not exposing the licensing server through a proxy) and it requires a MariaDB Database.
 This only reads from the database, it does not insert data into it; you will have to use another program for that or do it manually.
 This uses (Robyn)[https://github.com/sparckles/robyn], a python webserver that uses a Rust Runtime for better performance.
 
