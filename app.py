@@ -45,21 +45,41 @@ async def check_license(request):
         data = json.loads(request.body)
         license_key = data.get("license_key")
         
-        # Extract the client's IP address from the request
-        ip_address = request.headers.get("cf-connecting-ip")
+        headers_to_check = ["X-Forwarded-For", "Remote-Addr", "cf-connecting-ip"]
+
+        ip_address = None
+
+        for header in headers_to_check:
+            ip_address = request.headers.get(header)
+            if ip_address:
+                # If X-Forwarded-For contains multiple IPs (due to multiple proxies), take the first one
+                if header == "X-Forwarded-For" and "," in ip_address:
+                    ip_address = ip_address.split(",")[0].strip()
+                break
+
+        # If none of the headers provide the IP, use Robyn's method
+        if not ip_address:
+            ip_address = request.ip_addr
 
         # Input validation
         if not license_key or not ip_address:
             return {"error": "Invalid input"}, 400
 
-        # Query to check if the license and IP match
+        # Query to get the IP field for the given license_key
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT * FROM license_check WHERE license=%s AND ip=%s",
-                    (license_key, ip_address)
+                    "SELECT ip FROM license_check WHERE license=%s",
+                    (license_key,)
                 )
-                valid = await cur.fetchone()
+                result = await cur.fetchone()
+
+        # If there's a result and the extracted IP is in the list of IPs for that license
+        if result and ip_address in result[0].split(','):
+            valid = True
+        else:
+            valid = False
+
         if debug:
             print(f"IP Address: {ip_address}")
             print(f"License Key: {license_key}")
