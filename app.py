@@ -1,5 +1,3 @@
-# Created by loki_101 on Discord or loki@crazycoder.dev
-
 import os
 import json
 import aiomysql
@@ -19,6 +17,8 @@ async def startup_handler():
     db_host = os.getenv("DB_HOST", "Configure me first, moron!")
     db_name = os.getenv("DB_NAME", "license_db")
     db_port = int(os.getenv("DB_PORT", "3306"))
+    if os.getenv("LOG_LEVEL") == "DEBUG":
+        debug = True
     
     global pool
     pool = await aiomysql.create_pool(
@@ -33,20 +33,20 @@ async def shutdown_handler():
     global pool
     pool.close()
     await pool.wait_closed()
-    print("Database disconnected")
 
 @app.post("/")
 async def check_license(request):
-    debug = os.getenv("DEBUG", "").lower() == "true"
+    if os.getenv("LOG_LEVEL").lower() == "debug":
+        debug = True
+    else:
+        debug = False
     try:
         # Extract the license_key from the JSON payload
         data = json.loads(request.body)
         license_key = data.get("license_key")
-
+        
         # Extract the client's IP address from the request
         ip_address = request.headers.get("cf-connecting-ip")
-        if debug:
-            print(ip_address)
 
         # Input validation
         if not license_key or not ip_address:
@@ -66,12 +66,14 @@ async def check_license(request):
             print(f"Query Result: {valid}")
         if valid:
             if debug:
-            	print("License verified")
-            return {"status": "success", "message": "License verified."}
+                print("License verified")
+            response_data = {"status": "success", "message": "License verified."}
+            return json.dumps(response_data)
         else:
             if debug:
-            	print("License not found or IP mismatch")
-            return {"status": "failure", "message": "License not found or IP mismatch."}
+                print("License not found or IP mismatch")
+            response_data = {"status": "failure", "message": "License not found or IP mismatch."}
+            return json.dumps(response_data)
     except Exception as e:
         import traceback
         traceback.print_exc()
