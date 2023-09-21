@@ -17,8 +17,6 @@ async def startup_handler():
     db_host = os.getenv("DB_HOST", "Configure me first, moron!")
     db_name = os.getenv("DB_NAME", "license_db")
     db_port = int(os.getenv("DB_PORT", "3306"))
-    if os.getenv("LOG_LEVEL") == "DEBUG":
-        debug = True
     
     global pool
     pool = await aiomysql.create_pool(
@@ -26,6 +24,14 @@ async def startup_handler():
         user=db_user, password=db_password,
         db=db_name
     )
+    
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute("SHOW TABLES LIKE 'Licensing'")
+            result = await cur.fetchone()
+            if not result:
+                await create_licensing_table(cur)
+                
     print("Database connected")
 
 @app.shutdown_handler
@@ -33,6 +39,18 @@ async def shutdown_handler():
     global pool
     pool.close()
     await pool.wait_closed()
+
+async def create_licensing_table(cur):
+    create_table_query = """
+    CREATE TABLE `Licensing` (
+      `license` VARCHAR(255) NOT NULL PRIMARY KEY,
+      `ip` VARCHAR(512) NOT NULL,
+      `discordId` VARCHAR(255) NOT NULL,
+      `email` VARCHAR(100) NOT NULL,
+      UNIQUE KEY `Licensing_license_ip_key` (`license`,`ip`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    """
+    await cur.execute(create_table_query)
 
 @app.post("/")
 async def check_license(request):
