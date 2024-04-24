@@ -45,7 +45,7 @@ async def check_license(request):
         data = json.loads(request.body)
         license_key = data.get("license_key")
         
-        headers_to_check = ["X-Forwarded-For", "Remote-Addr", "cf-connecting-ip"]
+        headers_to_check = ["X-Forwarded-For", "Remote-Addr", "CF-Connecting-IP"]
 
         ip_address = None
 
