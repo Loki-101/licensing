@@ -15,7 +15,7 @@ Here's an example of a CURL request you can use when testing (Make sure to set D
 curl -X POST -H "Content-Type: application/json" -d '{"license_key":"test"}' https://subdomain-for-your-tunnel.domain.com
 ```
 
-The egg's install script creates a database with columns for license as the primary key and ip which are both requires as well as discordid and email which can be NULL.
+The egg's install script creates a database with columns for license as the primary key and ip which are both required, as well as discordid and email which are optional.
 It also creates a view that just sees license and ip and uses that for checking.
 
 If the license exists and the IP that goes with that license matches the IP the request was sent from the server will return status: success and message: License verified.
