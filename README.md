@@ -3,7 +3,7 @@ A simple licensing server with an optional Pterodactyl Egg
 
 This is designed to fetch the real IP through a proxy such as cloudflare by default (Or directly if you're not exposing the licensing server through a proxy) and it requires a MariaDB Database.
 This only reads from the database, it does not insert data into it; you will have to use another program for that or do it manually.
-This uses (Robyn)[https://github.com/sparckles/robyn], a python webserver that uses a Rust Runtime for better performance.
+This uses [Robyn](https://github.com/sparckles/robyn), a python webserver that uses a Rust Runtime for better performance.
 
 When hosting this in Pterodactyl Panel, you have several options for exposing it. You can allocate the internal address of your
 public internet interface and send requests to public_ip:port, you can allocate the internal ip of your pterodactyl0 interface
